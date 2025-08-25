@@ -25,7 +25,7 @@ function runAwsSSOLogin(profile) {
   });
 }
 
-async function execSSMCommand({ instanceId, host, port, profile }) {
+async function execSSMCommand({ instanceId, host, port=5432, localPort, profile }) {
   await runAwsSSOLogin(profile);
 
   const args = [
@@ -38,7 +38,7 @@ async function execSSMCommand({ instanceId, host, port, profile }) {
     '--document-name',
     'AWS-StartPortForwardingSessionToRemoteHost',
     '--parameters',
-    `host=${host},portNumber=5432,localPortNumber=${port}`,
+    `host=${host},portNumber=${port},localPortNumber=${localPort}`,
   ];
 
   return spawn('aws', args);

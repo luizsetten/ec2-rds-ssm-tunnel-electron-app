@@ -129,6 +129,7 @@ dbForm.addEventListener("submit", (e) => {
       instanceId: dbForm.instanceId.value,
       host: dbForm.host.value,
       port: parseInt(dbForm.port.value, 10),
+      localPort: parseInt(dbForm.localPort.value, 10),
       profile: dbForm.profile.value,
     };
     dbList.push(newDb);
@@ -139,6 +140,7 @@ dbForm.addEventListener("submit", (e) => {
       instanceId: dbForm.instanceId.value,
       host: dbForm.host.value,
       port: parseInt(dbForm.port.value, 10),
+      localPort: parseInt(dbForm.localPort.value, 10),
       profile: dbForm.profile.value,
     };
   }
