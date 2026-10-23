@@ -8,7 +8,11 @@
   <body>
     <div id="tela-home" class="tela">
       <h1>Conexões</h1>
-      <button onclick="novaConexao()">Nova Conexão</button>
+      <div class="home-actions">
+        <button onclick="novaConexao()">Nova Conexão</button>
+        <button id="login-aws-btn" class="btn-login">🔑 Login AWS</button>
+      </div>
+      <div id="app-log" class="app-log"></div>
       <div id="db-list"></div>
     </div>
 
@@ -23,14 +27,21 @@
           required
         />
         <input type="text" name="host" placeholder="Host do RDS" required />
-        <input type="number" name="port" placeholder="Porta Remota" required />
+        <input
+          type="number"
+          name="remotePort"
+          placeholder="Porta Remota (RDS)"
+          required
+        />
         <input
           type="number"
           name="localPort"
           placeholder="Porta Local"
           required
         />
-        <input type="text" name="profile" placeholder="AWS Profile" required />
+        <select name="profile" required>
+          <option value="" disabled selected>Selecione um AWS Profile</option>
+        </select>
         <button type="submit">Salvar</button>
       </form>
       <button onclick="abrirTela('home')">Voltar</button>

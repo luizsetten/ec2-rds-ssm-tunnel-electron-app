@@ -5,10 +5,15 @@ Utilizando AWS Bedrock para Construção de Chat com IA Generativa com Conteúdo
 
 ```
 Node v20+
-AWS CLI v2
-Conta AWS com credenciais configuradas (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION)
-
+AWS Session Manager Plugin (session-manager-plugin) instalado e no PATH
+Profile AWS SSO configurado em ~/.aws/config (sso_start_url / sso_region / sso_account_id / sso_role_name)
 ```
+
+> O app **não depende mais do AWS CLI**. A abertura do túnel é feita diretamente
+> via AWS SDK (chamada `StartSession`) e o `session-manager-plugin` cuida do
+> canal WebSocket. O login SSO (`aws sso login`) também foi substituído pelo
+> fluxo OIDC *device authorization* embutido no app, que abre o navegador para
+> autorização e reutiliza o cache em `~/.aws/sso/cache`.
 
 ### 🔧 Instalação
 

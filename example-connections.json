@@ -4,7 +4,8 @@
     "name": "RDS 1",
     "instanceId": "i-0321ewer32432009r",
     "host": "rds-systems-example-private.code.us-east-1.rds.amazonaws.com",
-    "port": 5432,
+    "remotePort": 5432,
+    "localPort": 5432,
     "profile": "profile-with-iam-role-ssm-permission"
   },
   {
@@ -12,7 +13,8 @@
     "name": "RDS 2",
     "instanceId": "i-0321ewer32432009r",
     "host": "rds-systems-example-private.code.us-east-1.rds.amazonaws.com",
-    "port": 5433,
+    "remotePort": 5432,
+    "localPort": 5433,
     "profile": "profile-with-iam-role-ssm-permission"
   },
   {
@@ -20,7 +22,8 @@
     "name": "RDS 3",
     "instanceId": "i-0321ewer32432009r",
     "host": "000.000.000.000",
-    "port": 5434,
+    "remotePort": 5432,
+    "localPort": 5434,
     "profile": "profile-with-iam-role-ssm-permission"
   }
 ]

@@ -6,15 +6,83 @@ let editIndex = null;
 const dbListContainer = document.getElementById("db-list");
 const dbForm = document.getElementById("db-form");
 const formTitle = document.getElementById("form-title");
+const loginAwsBtn = document.getElementById("login-aws-btn");
+const appLogEl = document.getElementById("app-log");
+
+loginAwsBtn.addEventListener("click", async () => {
+  loginAwsBtn.disabled = true;
+  loginAwsBtn.textContent = "Autenticando...";
+  if (appLogEl) appLogEl.textContent = "";
+
+  const result = await ipcRenderer.invoke("aws-login");
+
+  loginAwsBtn.disabled = false;
+  loginAwsBtn.textContent = "🔑 Login AWS";
+
+  if (!result.success) {
+    alert(`Erro no login AWS:\n${result.message}`);
+  }
+});
+
+ipcRenderer.on("app-log", (event, { message }) => {
+  if (!appLogEl) return;
+  const div = document.createElement("div");
+  div.textContent = message;
+  appLogEl.appendChild(div);
+  while (appLogEl.childElementCount > 4) {
+    appLogEl.removeChild(appLogEl.firstElementChild);
+  }
+  appLogEl.scrollTop = appLogEl.scrollHeight;
+});
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
+// Popula o <select name="profile"> com os profiles do ~/.aws/config.
+async function carregarProfiles() {
+  const select = dbForm.elements["profile"];
+  if (!select) return;
+
+  const atual = select.value;
+  const profiles = await ipcRenderer.invoke("list-profiles");
+
+  select.innerHTML =
+    '<option value="" disabled selected>Selecione um AWS Profile</option>';
+
+  profiles.forEach((profile) => {
+    const opt = document.createElement("option");
+    opt.value = profile;
+    opt.textContent = profile;
+    select.appendChild(opt);
+  });
+
+  if (atual) setProfileValue(atual);
+}
+
+// Seleciona um profile, adicionando uma opção caso ele não exista mais no config.
+function setProfileValue(value) {
+  const select = dbForm.elements["profile"];
+  if (!select || !value) return;
+
+  const existe = Array.from(select.options).some((o) => o.value === value);
+  if (!existe) {
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = `${value} (não encontrado no config)`;
+    select.appendChild(opt);
+  }
+
+  select.value = value;
+}
+
+carregarProfiles();
+
 function novaConexao() {
   editIndex = null;
   abrirTela("nova");
   dbForm.reset();
+  carregarProfiles();
   formTitle.textContent = "Nova Conexão";
 }
 
@@ -41,11 +109,12 @@ function renderDbList() {
     dbItem.className = "db-item";
     dbItem.innerHTML = `
       <span>${db.name}</span>
+      <span class="db-profile">Profile: ${db.profile || "—"}</span>
       <span id="status-${db.id}">Status: Desconectado</span>
       <button id="connect-btn-${db.id}" data-id="${db.id}">Conectar</button>
       <button id="disconnect-btn-${db.id}" data-id="${db.id}" disabled>Desconectar</button>
-      <button id="edit-btn-${db.id}" data-id="${db.id}">✏️</button>
-      <button id="remove-btn-${db.id}" data-id="${db.id}">🗑️</button>
+      <button id="edit-btn-${db.id}" class="btn-edit" data-id="${db.id}">✏️ Editar</button>
+      <button id="remove-btn-${db.id}" class="btn-remove" data-id="${db.id}">🗑️ Excluir</button>
     `;
 
     const dbLog = document.createElement("div");
@@ -108,7 +177,12 @@ dbListContainer.addEventListener("click", async (event) => {
     formTitle.textContent = "Editar Conexão";
     abrirTela("nova");
     const db = dbList[index];
+    await carregarProfiles();
     for (const [key, value] of Object.entries(db)) {
+      if (key === "profile") {
+        setProfileValue(value);
+        continue;
+      }
       const input = dbForm.elements[key];
       if (input) input.value = value;
     }
@@ -128,7 +202,7 @@ dbForm.addEventListener("submit", (e) => {
       name: dbForm.name.value,
       instanceId: dbForm.instanceId.value,
       host: dbForm.host.value,
-      port: parseInt(dbForm.port.value, 10),
+      remotePort: parseInt(dbForm.remotePort.value, 10),
       localPort: parseInt(dbForm.localPort.value, 10),
       profile: dbForm.profile.value,
     };
@@ -139,7 +213,7 @@ dbForm.addEventListener("submit", (e) => {
       name: dbForm.name.value,
       instanceId: dbForm.instanceId.value,
       host: dbForm.host.value,
-      port: parseInt(dbForm.port.value, 10),
+      remotePort: parseInt(dbForm.remotePort.value, 10),
       localPort: parseInt(dbForm.localPort.value, 10),
       profile: dbForm.profile.value,
     };
@@ -156,6 +230,27 @@ dbForm.addEventListener("submit", (e) => {
 ipcRenderer.on("db-status", (event, { id, status }) => {
   const el = document.getElementById(`status-${id}`);
   if (el) el.textContent = `Status: ${status}`;
+
+  const connectBtn = document.getElementById(`connect-btn-${id}`);
+  const disconnectBtn = document.getElementById(`disconnect-btn-${id}`);
+  if (!connectBtn || !disconnectBtn) return;
+
+  if (status === "conectado") {
+    connectBtn.disabled = true;
+    connectBtn.textContent = "Conectado";
+    disconnectBtn.disabled = false;
+    disconnectBtn.textContent = "Desconectar";
+  } else {
+    // desconectado / erro: libera reconexão
+    connectBtn.disabled = false;
+    connectBtn.textContent = "Conectar";
+    disconnectBtn.disabled = true;
+    disconnectBtn.textContent = "Desconectar";
+
+    if (status === "erro") {
+      alert(`Conexão "${dbList.find((db) => db.id === id)?.name || id}" foi encerrada devido a um erro.`);
+    }
+  }
 });
 
 ipcRenderer.on("db-log", (event, { id, message }) => {
@@ -164,6 +259,9 @@ ipcRenderer.on("db-log", (event, { id, message }) => {
     const div = document.createElement("div");
     div.textContent = message;
     el.appendChild(div);
+    while (el.childElementCount > 4) {
+      el.removeChild(el.firstElementChild);
+    }
     el.scrollTop = el.scrollHeight;
   }
 });

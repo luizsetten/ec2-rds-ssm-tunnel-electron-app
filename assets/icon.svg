@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- nuvem -->
+  <g fill="#f8f8f2">
+    <circle cx="92" cy="148" r="38" />
+    <circle cx="148" cy="120" r="54" />
+    <circle cx="190" cy="152" r="34" />
+    <rect x="66" y="146" width="148" height="44" rx="22" />
+  </g>
+  <!-- raio atravessando a nuvem -->
+  <path d="M150 40 L102 142 L136 142 L98 216 L180 112 L146 112 Z"
+        fill="#f1fa8c" stroke="#ffb86c" stroke-width="7"
+        stroke-linejoin="round" stroke-linecap="round" />
+</svg>
